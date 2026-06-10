@@ -310,3 +310,50 @@ Project1_API/database-for-Aiven.io.sql
 ```
 
 Use the reset file only when you are okay dropping and recreating the tables.
+
+## Postman setup
+
+Postman files are included in the `postman` folder:
+
+- `postman/SmartphoneStore_API.postman_collection.json`
+- `postman/SmartphoneStore_Local_Laragon.postman_environment.json`
+
+### Import into Postman
+
+1. Open Postman.
+2. Click **Import**.
+3. Import both JSON files from the `postman` folder.
+4. Select environment **Smartphone Store Local Laragon**.
+5. Confirm `base_url` is:
+
+```text
+http://localhost:8080
+```
+
+### Recommended test order
+
+1. Run `00 - Check Server / GET Health`.
+2. Run `00 - Check Server / GET DB Check`.
+3. Run `02 - Auth / POST Login Admin - save admin_token`.
+4. Run `04 - Admin Dashboard / GET Dashboard`.
+5. Run public product/category/search requests.
+
+### Default admin login
+
+```json
+{
+  "email": "admin@store.com",
+  "password": "admin123"
+}
+```
+
+The login request automatically saves the returned JWT into `admin_token`. Admin routes use `Authorization: Bearer {{admin_token}}`.
+
+### Client user flow
+
+1. Run `POST Register Client`.
+2. Copy the `debug_otp` value from the response.
+3. Paste it into `POST Verify OTP`.
+4. Run `POST Login Client - save user_token`.
+
+Client routes use `Authorization: Bearer {{user_token}}`.

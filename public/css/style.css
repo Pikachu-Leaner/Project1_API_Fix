@@ -728,3 +728,28 @@ body {
     font-size: 12px;
     text-decoration: line-through;
 }
+
+/* Warranty icon fixed to match the other footer service icons. */
+.service-card > .warranty-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 50% !important;
+    background: #fff0a8 !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+}
+
+.service-card > .warranty-icon svg {
+    width: 23px !important;
+    height: 23px !important;
+    fill: none !important;
+}
+
+.service-card > .warranty-icon svg path {
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2.1 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+}
