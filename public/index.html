@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smartphone Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        (function () {
+            function cleanBase(value) { return (value || '').replace(/\/+$/, ''); }
+            function detectAppBase() {
+                var path = window.location.pathname || '/';
+                var noSlash = path.replace(/\/+$/, '') || '/';
+                var publicIndex = path.indexOf('/public/');
+                if (publicIndex !== -1) return cleanBase(path.slice(0, publicIndex));
+                if (noSlash.endsWith('/public')) return cleanBase(noSlash.slice(0, -7));
+                var phpIndex = path.indexOf('/index.php');
+                if (phpIndex !== -1) return cleanBase(path.slice(0, phpIndex));
+                if (/\.[a-z0-9]+$/i.test(noSlash)) {
+                    var dir = noSlash.slice(0, noSlash.lastIndexOf('/'));
+                    return cleanBase(dir.endsWith('/public') ? dir.slice(0, -7) : dir);
+                }
+                return noSlash === '/' ? '' : cleanBase(noSlash);
+            }
+            var isStaticPreview = ['5500', '5501', '5502', '5503'].indexOf(window.location.port) !== -1 || window.location.protocol === 'file:';
+            var appBase = detectAppBase();
+            var publicAsRoot = isStaticPreview && window.location.pathname.indexOf('/public/') === -1 && !window.location.pathname.replace(/\/+$/, '').endsWith('/public');
+            window.APP_BASE = appBase;
+            window.PUBLIC_BASE = publicAsRoot ? '' : cleanBase(appBase + '/public');
+            document.write('<link rel="stylesheet" href="' + window.PUBLIC_BASE + '/css/style.css">');
+            if (publicAsRoot) document.write('<link rel="stylesheet" href="./css/style.css">');
+        })();
+    </script>
+</head>
+<body class="bg-light">
+    <header class="header-main py-2 shadow-sm border-bottom bg-white sticky-top">
+        <div class="container d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <a href="#/products" class="d-flex align-items-center gap-2 text-decoration-none text-dark fw-bold">
+                <img src="public/images/Store-image.png" class="store-logo" alt="Logo" onerror="this.onerror=null;this.src='./images/Store-image.png'">
+                <span class="d-none d-md-inline">Smartphone Store</span>
+            </a>
+
+            <form id="search-form" class="input-group search-wrapper flex-grow-1" style="max-width: 560px;">
+                <input id="search-input" type="text" class="form-control search-input" autocomplete="off" placeholder="Tìm tên sản phẩm, hãng...">
+                <button class="btn search-btn" type="submit"><i class="fas fa-search text-muted"></i></button>
+                <div id="search-suggestions" class="search-suggestions shadow-sm d-none"></div>
+            </form>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="#/cart" class="btn btn-dark text-white rounded-pill px-3 shadow-sm position-relative">
+                    <i class="fas fa-shopping-cart me-1"></i> Giỏ hàng
+                    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                </a>
+                <div class="dropdown">
+                    <button id="account-menu-button" class="btn btn-light dropdown-toggle border shadow-sm rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i><span id="account-name">Tài khoản</span>
+                    </button>
+                    <ul id="account-menu" class="dropdown-menu dropdown-menu-end shadow border-0 mt-2"></ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-main shadow bg-dark text-white">
+        <div class="container">
+            <ul id="category-nav" class="nav nav-pills justify-content-start flex-nowrap overflow-x-auto overflow-y-hidden py-2"></ul>
+        </div>
+    </nav>
+
+    <main class="container my-4" id="app">
+        <div class="text-center py-5 text-muted">
+            <div class="spinner-border" role="status"></div>
+            <p class="mt-3">Đang tải sản phẩm...</p>
+        </div>
+    </main>
+
+    <footer class="footer-main mt-5">
+        <div class="footer-service py-4 border-top border-bottom">
+            <div class="container">
+                <div class="row g-3 text-center text-md-start">
+                    <div class="col-6 col-lg-3"><div class="service-card"><i class="fas fa-truck-fast"></i><div><strong>Giao hàng nhanh</strong><span>Miễn phí từ 2.000.000đ</span></div></div></div>
+                    <div class="col-6 col-lg-3"><div class="service-card"><i class="fas fa-shield-halved"></i><div><strong>Hàng chính hãng</strong><span>Bảo hành điện tử rõ ràng</span></div></div></div>
+                    <div class="col-6 col-lg-3"><div class="service-card"><i class="fas fa-rotate-left"></i><div><strong>Đổi trả 7 ngày</strong><span>Hỗ trợ đổi mới khi lỗi</span></div></div></div>
+                    <div class="col-6 col-lg-3"><div class="service-card"><i class="fas fa-headset"></i><div><strong>Hỗ trợ 24/7</strong><span>Tư vấn mua hàng online</span></div></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-content bg-dark text-white pt-5 pb-4">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-md-4 col-lg-3">
+                        <h5 class="fw-bold mb-3">Smartphone Store</h5>
+                        <p class="text-white-50 small mb-3">Cửa hàng điện thoại, laptop và phụ kiện công nghệ với giá tốt, giao hàng nhanh và bảo hành minh bạch.</p>
+                        <div class="footer-social d-flex gap-2">
+                            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <h6 class="fw-bold mb-3">Sản phẩm</h6>
+                        <ul class="footer-links list-unstyled small">
+                            <li><a href="#/products">Điện thoại</a></li>
+                            <li><a href="#/products">Laptop</a></li>
+                            <li><a href="#/products">Phụ kiện</a></li>
+                            <li><a href="#/products?sort=moi">Hàng mới về</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <h6 class="fw-bold mb-3">Chính sách</h6>
+                        <ul class="footer-links list-unstyled small">
+                            <li><a href="#">Bảo hành</a></li>
+                            <li><a href="#">Đổi trả</a></li>
+                            <li><a href="#">Giao hàng</a></li>
+                            <li><a href="#">Thanh toán</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4 col-lg-2">
+                        <h6 class="fw-bold mb-3">Liên hệ</h6>
+                        <ul class="footer-contact list-unstyled small text-white-50">
+                            <li><i class="fas fa-phone me-2"></i>1900 1234</li>
+                            <li><i class="fas fa-envelope me-2"></i>support@smartstore.test</li>
+                            <li><i class="fas fa-location-dot me-2"></i>123 Technology Street</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-8 col-lg-3">
+                        <h6 class="fw-bold mb-3">Nhận khuyến mãi</h6>
+                        <p class="text-white-50 small">Đăng ký để nhận mã giảm giá và tin sản phẩm mới.</p>
+                        <form class="footer-newsletter d-flex gap-2" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã đăng ký!');">
+                            <input type="email" class="form-control form-control-sm" placeholder="Email của bạn" required>
+                            <button class="btn btn-warning btn-sm fw-bold">Gửi</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="footer-bottom border-top border-secondary mt-4 pt-3 d-flex flex-column flex-md-row justify-content-between gap-2 small text-white-50">
+                    <span>© 2026 Smartphone Store. All rights reserved.</span>
+                    <span>Visa · Mastercard · Momo · COD</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="productModalTitle">Product</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="product-form" class="modal-body"></form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            var primary = (window.PUBLIC_BASE || '/public').replace(/\/+$/, '') + '/js/app.js';
+            var fallback = './js/app.js';
+            var s = document.createElement('script');
+            s.src = primary;
+            s.onerror = function () {
+                var f = document.createElement('script');
+                f.src = fallback;
+                document.body.appendChild(f);
+            };
+            document.body.appendChild(s);
+        })();
+    </script>
+</body>
+</html>
