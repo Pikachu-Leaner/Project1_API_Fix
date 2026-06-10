@@ -530,22 +530,41 @@ function renderRegister() {
         e.preventDefault();
         const body = Object.fromEntries(new FormData(e.target).entries());
         const data = await api('/auth/register', { method: 'POST', body });
-        toast(`OTP test: ${data.debug_otp}`, 'info');
+        if (data.debug_otp) {
+            sessionStorage.setItem(`mock_otp_${data.email}`, data.debug_otp);
+            toast(`Mock OTP: ${data.debug_otp}`, 'info');
+        }
         navigate('/verify-otp?email=' + encodeURIComponent(data.email));
     });
 }
 
 function renderVerifyOtp() {
     const email = routeInfo().params.get('email') || '';
+    const mockOtp = email ? sessionStorage.getItem(`mock_otp_${email}`) : '';
     app.innerHTML = `
         <div class="auth-card bg-white p-4 rounded shadow-sm">
             <h3 class="fw-bold mb-3">Xác thực OTP</h3>
+            ${mockOtp ? `
+                <div class="alert alert-warning mock-otp-box">
+                    <div class="fw-bold"><i class="fas fa-flask me-1"></i>Mock OTP test</div>
+                    <div>Dùng mã này để xác thực: <button type="button" class="btn btn-sm btn-outline-dark ms-1 py-0" id="fill-mock-otp"><strong>${esc(mockOtp)}</strong></button></div>
+                    <small class="text-muted">Mã này chỉ hiển thị vì backend hiện đang dùng Mock OTP, chưa gửi email thật.</small>
+                </div>` : `
+                <div class="alert alert-info">
+                    Nếu đang dùng Mock OTP, hãy xem mã trong Postman/DevTools Network response hoặc cột <code>users.otp_code</code> trong HeidiSQL.
+                </div>`}
             <form id="otp-form" class="vstack gap-3">
                 <input class="form-control" type="email" name="email" value="${esc(email)}" placeholder="Email" required>
                 <input class="form-control" name="otp" placeholder="Mã OTP" required>
                 <button class="btn btn-primary fw-bold">Xác thực</button>
             </form>
         </div>`;
+    const fillMockOtpBtn = $('#fill-mock-otp');
+    if (fillMockOtpBtn) fillMockOtpBtn.addEventListener('click', () => {
+        const otpInput = $('#otp-form input[name="otp"]');
+        otpInput.value = mockOtp;
+        otpInput.focus();
+    });
     $('#otp-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await api('/auth/verify-otp', { method: 'POST', body: Object.fromEntries(new FormData(e.target).entries()) });
@@ -563,16 +582,26 @@ function renderForgotPassword() {
     $('#forgot-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = await api('/auth/forgot-password', { method: 'POST', body: Object.fromEntries(new FormData(e.target).entries()) });
-        toast(`OTP test: ${data.debug_otp}`, 'info');
+        if (data.debug_otp) {
+            sessionStorage.setItem(`mock_reset_otp_${data.email}`, data.debug_otp);
+            toast(`Mock OTP: ${data.debug_otp}`, 'info');
+        }
         navigate('/reset-password?email=' + encodeURIComponent(data.email));
     });
 }
 
 function renderResetPassword() {
     const email = routeInfo().params.get('email') || '';
+    const mockOtp = email ? sessionStorage.getItem(`mock_reset_otp_${email}`) : '';
     app.innerHTML = `
         <div class="auth-card bg-white p-4 rounded shadow-sm">
             <h3 class="fw-bold mb-3">Đặt lại mật khẩu</h3>
+            ${mockOtp ? `
+                <div class="alert alert-warning mock-otp-box">
+                    <div class="fw-bold"><i class="fas fa-flask me-1"></i>Mock OTP test</div>
+                    <div>Dùng mã này để đặt lại mật khẩu: <button type="button" class="btn btn-sm btn-outline-dark ms-1 py-0" id="fill-mock-reset-otp"><strong>${esc(mockOtp)}</strong></button></div>
+                    <small class="text-muted">Mã này chỉ hiển thị vì backend hiện đang dùng Mock OTP, chưa gửi email thật.</small>
+                </div>` : ''}
             <form id="reset-form" class="vstack gap-3">
                 <input class="form-control" type="email" name="email" value="${esc(email)}" placeholder="Email" required>
                 <input class="form-control" name="otp" placeholder="Mã OTP" required>
@@ -580,6 +609,12 @@ function renderResetPassword() {
                 <button class="btn btn-primary fw-bold">Cập nhật mật khẩu</button>
             </form>
         </div>`;
+    const fillMockResetOtpBtn = $('#fill-mock-reset-otp');
+    if (fillMockResetOtpBtn) fillMockResetOtpBtn.addEventListener('click', () => {
+        const otpInput = $('#reset-form input[name="otp"]');
+        otpInput.value = mockOtp;
+        otpInput.focus();
+    });
     $('#reset-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         await api('/auth/reset-password', { method: 'PATCH', body: Object.fromEntries(new FormData(e.target).entries()) });
