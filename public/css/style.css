@@ -238,35 +238,41 @@ body {
 }
 
 .warranty-icon {
-    width: 50px;
-    height: 50px;
-    min-width: 50px;
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
     background: transparent;
     border-radius: 0;
+    box-shadow: none;
 }
 
 .warranty-icon svg {
-    width: 50px;
-    height: 50px;
+    width: 58px;
+    height: 58px;
     overflow: visible;
 }
 
 .warranty-arrow,
+.warranty-arrow-head,
 .warranty-shield,
 .warranty-check {
     fill: none;
-    stroke: #73d84f;
-    stroke-width: 4.2;
+    stroke: #79d953;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
+.warranty-arrow,
+.warranty-arrow-head {
+    stroke-width: 8;
+}
+
 .warranty-shield {
-    stroke-width: 4.6;
+    stroke-width: 6.5;
 }
 
 .warranty-check {
-    stroke-width: 5;
+    stroke-width: 8;
 }
 
 .service-card strong {
@@ -549,4 +555,176 @@ body {
 }
 .service-card > .warranty-icon {
     color: #73d84f;
+}
+
+
+/* Product cards and rich product detail page */
+.product-card .card-title {
+    min-height: 42px;
+    line-height: 1.35;
+}
+.product-card .btn-buy-now-card {
+    background: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+    color: #111111;
+    font-weight: 700;
+}
+.product-card .btn-buy-now-card:hover {
+    background: #ffbf00;
+    border-color: #ffbf00;
+    color: #111111;
+}
+.product-detail-card {
+    border: 1px solid #eef1f4;
+}
+.detail-image-box {
+    min-height: 430px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+    border: 1px solid #f0f0f0;
+    border-radius: 18px;
+}
+.detail-image-box img {
+    max-height: 410px;
+    object-fit: contain;
+}
+.product-detail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #eaf8ef;
+    color: #138a36;
+}
+.price-panel {
+    background: linear-gradient(90deg, #fff6f6, #ffffff);
+    border: 1px solid #ffe1e4;
+    border-radius: 16px;
+    padding: 16px;
+}
+.detail-price {
+    color: var(--price-red);
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 800;
+    line-height: 1;
+}
+.discount-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #dc3545;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+}
+.promo-box {
+    border: 1px solid #ffd2d8;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #ffffff;
+}
+.promo-title {
+    background: #fff1f3;
+    color: #d70018;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-bottom: 1px solid #ffd2d8;
+}
+.promo-box ul {
+    margin: 0;
+    padding: 12px 18px 14px 34px;
+}
+.promo-box li { margin-bottom: 8px; }
+.promo-box li:last-child { margin-bottom: 0; }
+.detail-action-row .btn {
+    min-height: 52px;
+    border-radius: 12px;
+}
+.policy-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.policy-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid #edf0f3;
+    border-radius: 12px;
+    background: #fff;
+}
+.policy-item i {
+    color: #0d6efd;
+    margin-top: 2px;
+}
+.spec-card, .description-card {
+    border: 1px solid #eef1f4;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,.04);
+}
+.spec-table td {
+    padding: 11px 12px;
+    border-color: #eef1f4;
+}
+.spec-table td:first-child {
+    width: 38%;
+    color: #667085;
+    background: #f8fafc;
+    font-weight: 600;
+}
+.detail-service-mini {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.detail-service-mini .mini-service {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475467;
+    font-size: 13px;
+}
+.detail-service-mini .mini-service i { color: #16a34a; }
+@media (max-width: 767.98px) {
+    .policy-grid, .detail-service-mini { grid-template-columns: 1fr; }
+    .detail-image-box { min-height: 300px; }
+}
+.keyword-suggestion-list {
+    padding: 4px 0 6px;
+    border-bottom: 1px solid #eeeeee;
+}
+.keyword-suggestion {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: #ffffff;
+    text-align: left;
+    padding: 9px 12px;
+    color: #0d6efd;
+    font-size: 14px;
+}
+.keyword-suggestion:hover {
+    background: #fff8d2;
+}
+.keyword-suggestion mark {
+    background: #ffd400;
+    color: #111111;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+.suggestion-old-price {
+    color: #888888;
+    font-size: 12px;
+    text-decoration: line-through;
 }

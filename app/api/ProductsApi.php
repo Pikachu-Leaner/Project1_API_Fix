@@ -82,7 +82,7 @@ class ProductsApi {
     public function suggest(): void {
         $q = trim((string)($_GET['q'] ?? $_GET['search'] ?? ''));
         if (mb_strlen($q, 'UTF-8') < 1) {
-            Response::ok(['suggestions' => []]);
+            Response::ok(['suggestions' => [], 'keywords' => []]);
         }
 
         $products = array_slice($this->productQuery(['search' => $q, 'sort' => 'noi_bat']), 0, 8);
@@ -91,14 +91,38 @@ class ProductsApi {
                 'id' => (int)$p['id'],
                 'name' => $p['name'],
                 'brand' => $p['brand'],
+                'category_name' => $p['category_name'] ?? '',
                 'price' => (int)$p['price'],
+                'old_price' => isset($p['old_price']) ? (int)$p['old_price'] : null,
                 'image_url' => $p['image_url'],
                 'highlighted_name' => SearchHelper::highlight($p['name'], $q),
                 'score' => SearchHelper::score($p, $q),
             ];
         }, $products);
 
-        Response::ok(['suggestions' => $suggestions]);
+        $keywordMap = [];
+        foreach ($products as $p) {
+            foreach ([$p['brand'] ?? '', $p['category_name'] ?? ''] as $term) {
+                $term = trim((string)$term);
+                if ($term !== '' && mb_stripos($term, $q, 0, 'UTF-8') !== false) {
+                    $keywordMap[mb_strtolower($term, 'UTF-8')] = $term;
+                }
+            }
+            $words = preg_split('/\s+/u', (string)$p['name']);
+            foreach ($words as $word) {
+                $word = trim($word, " -_()[]{}.,");
+                if (mb_strlen($word, 'UTF-8') >= 2 && mb_stripos($word, $q, 0, 'UTF-8') !== false) {
+                    $keywordMap[mb_strtolower($word, 'UTF-8')] = $word;
+                }
+            }
+        }
+        $keywords = array_slice(array_values($keywordMap), 0, 4);
+        $keywords = array_map(fn($term) => [
+            'term' => $term,
+            'highlighted_term' => SearchHelper::highlight($term, $q),
+        ], $keywords);
+
+        Response::ok(['suggestions' => $suggestions, 'keywords' => $keywords]);
     }
 
     public function show(int $id): void {

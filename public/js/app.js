@@ -187,7 +187,64 @@ async function refreshCartCount() {
     }
 }
 
+function discountPercent(product) {
+    const price = Number(product.price || 0);
+    const oldPrice = Number(product.old_price || 0);
+    if (!oldPrice || oldPrice <= price) return '';
+    return '-' + Math.round(((oldPrice - price) / oldPrice) * 100) + '%';
+}
+
+function productSpecs(product) {
+    const name = String(product.name || '').toLowerCase();
+    const brand = String(product.brand || 'Chính hãng');
+    const specs = [
+        ['Thương hiệu', product.brand || 'Chính hãng'],
+        ['Danh mục', product.category_name || 'Điện thoại'],
+        ['Tình trạng', 'Máy mới 100%, nguyên hộp'],
+        ['Bảo hành', 'Bảo hành điện tử chính hãng 12 tháng'],
+    ];
+
+    if (name.includes('iphone')) {
+        specs.push(['Hệ điều hành', 'iOS']);
+        specs.push(['Dịch vụ', 'Hỗ trợ chuyển dữ liệu và kích hoạt eSIM tại cửa hàng']);
+    } else if (brand.toLowerCase().includes('samsung')) {
+        specs.push(['Hệ điều hành', 'Android, One UI']);
+        specs.push(['Bảo mật', 'Hỗ trợ Samsung Knox / bảo mật vân tay']);
+    } else {
+        specs.push(['Hệ điều hành', 'Android']);
+        specs.push(['Kết nối', 'Hỗ trợ 4G/5G tùy phiên bản sản phẩm']);
+    }
+    return specs;
+}
+
+function productDetailParagraph(product) {
+    const detail = String(product.details || '').trim();
+    const name = esc(product.name || 'sản phẩm');
+    const brand = esc(product.brand || 'thương hiệu');
+    const base = detail ? esc(detail) : `${name} là lựa chọn phù hợp cho nhu cầu học tập, làm việc và giải trí hằng ngày.`;
+    return `${base}\n\nSản phẩm được bán theo chính sách hàng chính hãng, hỗ trợ kiểm tra máy khi nhận hàng, bảo hành điện tử rõ ràng và đổi mới trong 7 ngày nếu phát sinh lỗi phần cứng từ nhà sản xuất. Khách hàng có thể thanh toán tiền mặt, chuyển khoản hoặc chọn trả góp tùy điều kiện.`;
+}
+
+async function buyNow(productId) {
+    await addToCart(productId, false);
+    if (state.token) navigate('/cart');
+}
+
+function bindProductCardActions(scope = document) {
+    scope.querySelectorAll('.add-cart').forEach(btn => btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart(btn.dataset.id);
+    }));
+    scope.querySelectorAll('.buy-now').forEach(btn => btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        buyNow(btn.dataset.id);
+    }));
+}
+
 function productCard(product) {
+    const discount = discountPercent(product);
     return `
         <div class="col">
             <div class="card h-100 shadow-sm border-light product-card">
@@ -197,15 +254,18 @@ function productCard(product) {
                     </div>
                 </a>
                 <div class="card-body d-flex flex-column">
-                    <h6 class="card-title fw-bold" title="${esc(product.name)}">${esc(product.name)}</h6>
+                    <a href="#/products/${product.id}" class="text-decoration-none text-dark">
+                        <h6 class="card-title fw-bold" title="${esc(product.name)}">${esc(product.name)}</h6>
+                    </a>
                     <div class="small text-muted mb-2">${esc(product.brand)} ${product.category_name ? '· ' + esc(product.category_name) : ''}</div>
                     <div class="mt-auto">
                         <div class="product-price">${money(product.price)}</div>
                         ${product.old_price ? `<small class="product-old-price">${money(product.old_price)}</small>` : ''}
+                        ${discount ? `<span class="discount-badge">${discount}</span>` : ''}
                     </div>
                     <div class="d-flex gap-2 pt-3 border-top mt-3">
-                        <button class="btn btn-outline-primary btn-sm flex-fill add-cart" data-id="${product.id}"><i class="fas fa-cart-plus"></i></button>
-                        <a href="#/products/${product.id}" class="btn btn-outline-secondary btn-sm flex-fill">Chi tiết</a>
+                        <button class="btn btn-outline-primary btn-sm flex-fill add-cart" data-id="${product.id}" title="Thêm vào giỏ"><i class="fas fa-cart-plus"></i></button>
+                        <button class="btn btn-buy-now-card btn-sm flex-fill buy-now" data-id="${product.id}">Mua ngay</button>
                     </div>
                 </div>
             </div>
@@ -272,34 +332,92 @@ async function renderProducts() {
         next.set('sort', e.target.value);
         navigate('/products?' + next.toString());
     });
-    document.querySelectorAll('.add-cart').forEach(btn => btn.addEventListener('click', () => addToCart(btn.dataset.id)));
+    bindProductCardActions();
 }
 
 async function renderProductDetail(id) {
     const data = await api('/products/' + id);
     const p = data.product;
+    const discount = discountPercent(p);
+    const specs = productSpecs(p);
     app.innerHTML = `
-        <div class="bg-white rounded shadow-sm p-4">
-            <a href="#/products" class="text-decoration-none small"><i class="fas fa-arrow-left me-1"></i>Quay lại sản phẩm</a>
-            <div class="row mt-3 g-4">
-                <div class="col-md-5 text-center"><img src="${mediaUrl(p.image_url)}" class="img-fluid" style="max-height: 420px; object-fit: contain;" alt="${esc(p.name)}"></div>
-                <div class="col-md-7">
-                    <h2 class="fw-bold">${esc(p.name)}</h2>
+        <div class="product-detail-card bg-white rounded shadow-sm p-3 p-md-4">
+            <a href="#/products" class="text-decoration-none small fw-semibold"><i class="fas fa-arrow-left me-1"></i>Quay lại sản phẩm</a>
+            <div class="row mt-3 g-4 align-items-start">
+                <div class="col-lg-5">
+                    <div class="detail-image-box mb-3">
+                        <img src="${mediaUrl(p.image_url)}" class="img-fluid" alt="${esc(p.name)}" onerror="this.src='${asset('images/Phone-card-image-1.jpg')}'">
+                    </div>
+                    <div class="detail-service-mini">
+                        <div class="mini-service"><i class="fas fa-shield-halved"></i><span>Máy chính hãng, bảo hành điện tử</span></div>
+                        <div class="mini-service"><i class="fas fa-box-open"></i><span>Nguyên hộp, phụ kiện theo máy</span></div>
+                        <div class="mini-service"><i class="fas fa-rotate-left"></i><span>Đổi mới 7 ngày nếu lỗi</span></div>
+                        <div class="mini-service"><i class="fas fa-truck-fast"></i><span>Giao nhanh nội thành</span></div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="product-detail-badge"><i class="fas fa-circle-check"></i> Hàng chính hãng</span>
+                        ${p.is_featured ? '<span class="product-detail-badge"><i class="fas fa-fire"></i> Đang nổi bật</span>' : ''}
+                    </div>
+                    <h1 class="fw-bold h2 mb-2">${esc(p.name)}</h1>
                     <div class="text-muted mb-3">${esc(p.brand)} ${p.category_name ? '· ' + esc(p.category_name) : ''}</div>
-                    <div class="display-6 text-danger fw-bold mb-1">${money(p.price)}</div>
-                    ${p.old_price ? `<div class="text-muted text-decoration-line-through mb-3">${money(p.old_price)}</div>` : ''}
-                    <p class="pre-wrap">${esc(p.details || 'Chưa có mô tả chi tiết.')}</p>
-                    <div class="d-flex gap-2 mt-4">
-                        <button id="detail-add-cart" class="btn btn-primary btn-lg"><i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ</button>
-                        <button id="detail-buy-now" class="btn btn-warning btn-lg fw-bold">Mua ngay</button>
+
+                    <div class="price-panel mb-3">
+                        <div class="d-flex flex-wrap align-items-end gap-3">
+                            <div class="detail-price">${money(p.price)}</div>
+                            ${p.old_price ? `<div class="text-muted text-decoration-line-through mb-1">${money(p.old_price)}</div>` : ''}
+                            ${discount ? `<span class="discount-pill mb-1">${discount}</span>` : ''}
+                        </div>
+                        <div class="small text-success fw-semibold mt-2"><i class="fas fa-check-circle me-1"></i>Còn hàng online - hỗ trợ đặt giữ hàng tại cửa hàng</div>
+                    </div>
+
+                    <div class="promo-box mb-3">
+                        <div class="promo-title"><i class="fas fa-gift me-2"></i>Khuyến mãi & ưu đãi</div>
+                        <ul class="small">
+                            <li>Giảm thêm khi thanh toán chuyển khoản hoặc dùng mã khuyến mãi tại checkout.</li>
+                            <li>Hỗ trợ trả góp 0% qua thẻ tín dụng / công ty tài chính tùy hồ sơ.</li>
+                            <li>Miễn phí giao hàng cho đơn từ 2.000.000đ.</li>
+                            <li>Hỗ trợ sao lưu, chuyển dữ liệu và kiểm tra máy trước khi nhận.</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex gap-2 detail-action-row mb-4">
+                        <button id="detail-add-cart" class="btn btn-primary btn-lg flex-fill"><i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ</button>
+                        <button id="detail-buy-now" class="btn btn-warning btn-lg fw-bold flex-fill">Mua ngay</button>
+                    </div>
+
+                    <div class="policy-grid">
+                        <div class="policy-item"><i class="fas fa-award"></i><div><strong>Bảo hành rõ ràng</strong><br><span class="small text-muted">Tra cứu điện tử, hỗ trợ tiếp nhận nhanh.</span></div></div>
+                        <div class="policy-item"><i class="fas fa-repeat"></i><div><strong>Đổi trả 7 ngày</strong><br><span class="small text-muted">Áp dụng khi lỗi phần cứng do NSX.</span></div></div>
+                        <div class="policy-item"><i class="fas fa-credit-card"></i><div><strong>Thanh toán linh hoạt</strong><br><span class="small text-muted">COD, chuyển khoản, thẻ, trả góp.</span></div></div>
+                        <div class="policy-item"><i class="fas fa-headset"></i><div><strong>Hỗ trợ 24/7</strong><br><span class="small text-muted">Tư vấn mua hàng và xử lý đơn.</span></div></div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-lg-5">
+                <div class="spec-card p-3 p-md-4 h-100">
+                    <h4 class="fw-bold mb-3"><i class="fas fa-list-check me-2 text-primary"></i>Thông số nổi bật</h4>
+                    <table class="table spec-table mb-0">
+                        <tbody>${specs.map(row => `<tr><td>${esc(row[0])}</td><td>${esc(row[1])}</td></tr>`).join('')}</tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="description-card p-3 p-md-4 h-100">
+                    <h4 class="fw-bold mb-3"><i class="fas fa-circle-info me-2 text-primary"></i>Mô tả sản phẩm</h4>
+                    <p class="pre-wrap mb-0">${productDetailParagraph(p)}</p>
+                </div>
+            </div>
+        </div>
+
         ${data.related?.length ? `<h4 class="mt-5 mb-3 fw-bold">Sản phẩm liên quan</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">${data.related.map(productCard).join('')}</div>` : ''}`;
     $('#detail-add-cart').addEventListener('click', () => addToCart(id));
-    $('#detail-buy-now').addEventListener('click', async () => { await addToCart(id, false); navigate('/cart'); });
-    document.querySelectorAll('.add-cart').forEach(btn => btn.addEventListener('click', () => addToCart(btn.dataset.id)));
+    $('#detail-buy-now').addEventListener('click', () => buyNow(id));
+    bindProductCardActions();
 }
 
 async function addToCart(productId, showMessage = true) {
@@ -621,13 +739,18 @@ function setupSearch() {
         box.innerHTML = '';
     };
 
-    const renderSuggestionList = (suggestions) => {
-        if (!suggestions.length) {
+    const renderSuggestionList = (suggestions, keywords = []) => {
+        if (!suggestions.length && !keywords.length) {
             box.innerHTML = '<div class="p-3 text-muted small">Không có gợi ý phù hợp.</div>';
             box.classList.remove('d-none');
             return;
         }
-        box.innerHTML = `
+        const keywordHtml = keywords.length ? `
+            <div class="search-suggestion-heading">Có phải bạn muốn tìm</div>
+            <div class="keyword-suggestion-list">
+                ${keywords.map(k => `<button type="button" class="keyword-suggestion" data-term="${esc(k.term)}"><i class="fas fa-magnifying-glass me-2"></i>${k.highlighted_term || esc(k.term)}</button>`).join('')}
+            </div>` : '';
+        const productHtml = suggestions.length ? `
             <div class="search-suggestion-heading">Sản phẩm gợi ý</div>
             ${suggestions.map(s => `
                 <button class="suggestion-item" type="button" data-id="${s.id}">
@@ -635,10 +758,18 @@ function setupSearch() {
                     <span class="d-block flex-grow-1">
                         <span class="suggestion-name fw-semibold">${s.highlighted_name || esc(s.name)}</span><br>
                         <span class="suggestion-price">${money(s.price)}</span>
+                        ${s.old_price ? `<span class="suggestion-old-price ms-1">${money(s.old_price)}</span>` : ''}
                         <span class="suggestion-meta ms-1">${esc(s.brand || '')}</span>
                     </span>
-                </button>`).join('')}`;
+                </button>`).join('')}` : '';
+        box.innerHTML = keywordHtml + productHtml;
         box.classList.remove('d-none');
+        box.querySelectorAll('.keyword-suggestion').forEach(btn => btn.addEventListener('click', () => {
+            const term = btn.dataset.term || '';
+            input.value = term;
+            hideBox();
+            navigate('/products?search=' + encodeURIComponent(term));
+        }));
         box.querySelectorAll('.suggestion-item').forEach(btn => btn.addEventListener('click', () => {
             hideBox();
             navigate('/products/' + btn.dataset.id);
@@ -656,7 +787,7 @@ function setupSearch() {
             try {
                 const data = await api('/products/suggest?q=' + encodeURIComponent(q), { signal: requestController.signal, timeout: 8000 });
                 if (seq !== requestSeq || input.value.trim() !== q) return;
-                renderSuggestionList(data.suggestions || []);
+                renderSuggestionList(data.suggestions || [], data.keywords || []);
             } catch (err) {
                 if (err.name !== 'AbortError') hideBox();
             }
