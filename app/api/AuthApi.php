@@ -35,8 +35,8 @@ class AuthApi {
         }
 
         $otp = (string)random_int(100000, 999999);
-        $stmt = $this->conn->prepare('INSERT INTO users (full_name, email, password, otp_code, role, is_active, is_verified) VALUES (?, ?, ?, ?, "Client", 1, 0)');
-        $stmt->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $otp]);
+        $stmt = $this->conn->prepare('INSERT INTO users (full_name, email, password, otp_code, role, is_active, is_verified) VALUES (?, ?, ?, ?, ?, 1, 0)');
+        $stmt->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $otp, 'Client']);
 
         Response::ok([
             'message' => 'Registered successfully. Verify the OTP before login.',
