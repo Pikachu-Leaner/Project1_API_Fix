@@ -28,9 +28,13 @@ class ProductsApi {
         if (!empty($filters['search'])) {
             $terms = array_values(array_filter(preg_split('/\s+/u', trim((string)$filters['search']))));
             foreach ($terms as $idx => $term) {
-                $key = ':term' . $idx;
-                $conditions[] = "(p.name LIKE {$key} OR p.brand LIKE {$key} OR c.name LIKE {$key})";
-                $params[$key] = '%' . $term . '%';
+                $nameKey = ':term_name_' . $idx;
+                $brandKey = ':term_brand_' . $idx;
+                $categoryKey = ':term_category_' . $idx;
+                $conditions[] = "(p.name LIKE {$nameKey} OR p.brand LIKE {$brandKey} OR c.name LIKE {$categoryKey})";
+                $params[$nameKey] = '%' . $term . '%';
+                $params[$brandKey] = '%' . $term . '%';
+                $params[$categoryKey] = '%' . $term . '%';
             }
         }
 

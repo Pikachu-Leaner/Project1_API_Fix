@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS electronic_store CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE electronic_store;
 SET FOREIGN_KEY_CHECKS = 0;
+DROP VIEW IF EXISTS admin_dashboard_stats;
 DROP TABLE IF EXISTS order_details;
 DROP TABLE IF EXISTS cart_items;
 DROP TABLE IF EXISTS orders;
@@ -99,6 +100,16 @@ INSERT INTO products (name, category_id, brand, price, old_price, image_url, det
 ('Motorola Edge 50 Pro 5G', 1, 'motorola', 14990000, NULL, 'public/images/Phone-card-image-8.jpg', 'Màn hình pOLED chuẩn màu Pantone đầu tiên trên thế giới, khả năng chống nước IP68.', 40, FALSE),
 ('iPhone 13 128GB', 1, 'iPhone', 15990000, 17990000, 'public/images/Phone-card-image-9.jpg', 'Dòng sản phẩm quốc dân sở hữu thời lượng pin ấn tượng, hiệu năng mượt mà ổn định lâu dài.', 800, FALSE),
 ('Samsung Galaxy A55 5G', 1, 'SAMSUNG', 10490000, NULL, 'public/images/Phone-card-image-10.jpg', 'Khung viền kim loại cao cấp, bảo mật Knox Vault cấp độ chip, camera quay phim đêm sắc nét.', 300, FALSE);
+
+
+DROP VIEW IF EXISTS admin_dashboard_stats;
+CREATE VIEW admin_dashboard_stats AS
+SELECT
+    (SELECT COUNT(*) FROM products) AS products,
+    (SELECT COUNT(*) FROM users) AS users,
+    (SELECT COUNT(*) FROM orders) AS orders,
+    (SELECT COUNT(*) FROM orders WHERE status = 'Pending') AS pending_orders,
+    (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status = 'Completed') AS revenue;
 
 -- Admin login: admin@store.com / admin123
 INSERT INTO users (full_name, email, password, role, is_active, is_verified)

@@ -56,6 +56,7 @@ async function api(path, options = {}) {
     const config = { ...options, headers };
     const controller = new AbortController();
     const timeoutMs = options.timeout || 15000;
+    const usesExternalSignal = !!options.signal;
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     config.signal = options.signal || controller.signal;
     delete config.timeout;
@@ -71,6 +72,7 @@ async function api(path, options = {}) {
         response = await fetch(API_BASE + path, config);
     } catch (err) {
         if (err.name === 'AbortError') {
+            if (usesExternalSignal) throw err;
             throw new Error('Không thể kết nối API sau 15 giây. Kiểm tra Laragon Apache/MySQL, port 8080 và import database.sql.');
         }
         throw new Error('Không thể gọi API. Hãy mở bằng Laragon, không mở bằng Five Server. Chi tiết: ' + err.message);
@@ -109,7 +111,26 @@ function routeInfo() {
 }
 
 function navigate(path) {
-    window.location.hash = path;
+    const next = String(path || '/products');
+    if (window.location.hash === '#' + next) {
+        router();
+        return;
+    }
+    window.location.hash = next;
+}
+
+function updatePageChrome() {
+    const { path } = routeInfo();
+    const parts = path.split('/').filter(Boolean);
+    const isProductIndex = (parts.length === 0 || parts[0] === 'products') && !parts[1];
+    const isAdmin = parts[0] === 'admin';
+    const navMain = $('.nav-main');
+    const searchForm = $('#search-form');
+    const cartLink = $('#top-cart-link');
+    if (navMain) navMain.classList.toggle('d-none', !isProductIndex);
+    if (searchForm) searchForm.classList.toggle('d-none', isAdmin);
+    if (cartLink) cartLink.classList.toggle('d-none', isAdmin);
+    document.body.classList.toggle('admin-view', isAdmin);
 }
 
 async function loadCategories() {
@@ -240,9 +261,9 @@ async function renderProducts() {
                 </div>
             </div>
             <div class="col-md-9">
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-                    ${state.products.length ? state.products.map(productCard).join('') : '<div class="col-12 text-center py-5 text-muted"><h4><i class="fas fa-search me-2"></i>Không tìm thấy sản phẩm nào phù hợp.</h4></div>'}
-                </div>
+                ${state.products.length
+                    ? `<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">${state.products.map(productCard).join('')}</div>`
+                    : `<div class="empty-products bg-white rounded shadow-sm border text-muted"><h4><i class="fas fa-search me-2"></i>Không tìm thấy sản phẩm nào phù hợp.</h4></div>`}
             </div>
         </div>`;
 
@@ -497,12 +518,30 @@ async function renderAdmin() {
     const [dash, products, users, orders] = await Promise.all([
         api('/admin/dashboard'), api('/admin/products'), api('/admin/users'), api('/admin/orders')
     ]);
+    const stats = dash.stats || {};
+    const cards = [
+        { key: 'products', label: 'Products', icon: 'fa-mobile-screen-button', value: stats.products || 0 },
+        { key: 'users', label: 'Users', icon: 'fa-users', value: stats.users || 0 },
+        { key: 'orders', label: 'Orders', icon: 'fa-receipt', value: stats.orders || 0 },
+        { key: 'pending_orders', label: 'Pending Orders', icon: 'fa-hourglass-half', value: stats.pending_orders || 0 },
+        { key: 'revenue', label: 'Revenue', icon: 'fa-coins', value: money(stats.revenue || 0) },
+    ];
     app.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-4"><h2 class="fw-bold">Admin Panel</h2><button id="new-product" class="btn btn-warning fw-bold"><i class="fas fa-plus me-1"></i>Thêm sản phẩm</button></div>
-        <div class="row g-3 mb-4">
-            ${Object.entries(dash.stats).map(([k,v]) => `<div class="col-md"><div class="bg-white rounded shadow-sm p-3"><div class="text-muted small text-uppercase">${esc(k.replaceAll('_',' '))}</div><div class="fs-3 fw-bold">${k === 'revenue' ? money(v) : esc(v)}</div></div></div>`).join('')}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Admin Panel</h2>
+                <div class="text-muted small">Quản lý sản phẩm, users, orders, pending orders và revenue.</div>
+            </div>
+            <button id="new-product" class="btn btn-warning fw-bold"><i class="fas fa-plus me-1"></i>Thêm sản phẩm</button>
         </div>
-        <ul class="nav nav-tabs" id="admin-tabs" role="tablist"><li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#admin-products">Products</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-users">Users</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-orders">Orders</button></li></ul>
+        <div class="row g-3 mb-4">
+            ${cards.map(card => `<div class="col-sm-6 col-xl"><div class="bg-white rounded shadow-sm p-3 admin-stat-card h-100"><div class="d-flex align-items-center gap-3"><span class="stat-icon"><i class="fas ${card.icon}"></i></span><div><div class="text-muted small text-uppercase fw-bold">${esc(card.label)}</div><div class="fs-3 fw-bold">${esc(card.value)}</div></div></div></div></div>`).join('')}
+        </div>
+        <ul class="nav nav-tabs" id="admin-tabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#admin-products">Products</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-users">Users</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-orders">Orders</button></li>
+        </ul>
         <div class="tab-content bg-white rounded-bottom shadow-sm p-3">
             <div class="tab-pane fade show active" id="admin-products">${adminProductsTable(products.products || [])}</div>
             <div class="tab-pane fade" id="admin-users">${adminUsersTable(users.users || [])}</div>
@@ -574,28 +613,69 @@ function setupSearch() {
     const input = $('#search-input');
     const box = $('#search-suggestions');
     let timer = null;
+    let requestController = null;
+    let requestSeq = 0;
+
+    const hideBox = () => {
+        box.classList.add('d-none');
+        box.innerHTML = '';
+    };
+
+    const renderSuggestionList = (suggestions) => {
+        if (!suggestions.length) {
+            box.innerHTML = '<div class="p-3 text-muted small">Không có gợi ý phù hợp.</div>';
+            box.classList.remove('d-none');
+            return;
+        }
+        box.innerHTML = `
+            <div class="search-suggestion-heading">Sản phẩm gợi ý</div>
+            ${suggestions.map(s => `
+                <button class="suggestion-item" type="button" data-id="${s.id}">
+                    <img src="${mediaUrl(s.image_url)}" alt="${esc(s.name)}" onerror="this.src='${asset('images/Phone-card-image-1.jpg')}'">
+                    <span class="d-block flex-grow-1">
+                        <span class="suggestion-name fw-semibold">${s.highlighted_name || esc(s.name)}</span><br>
+                        <span class="suggestion-price">${money(s.price)}</span>
+                        <span class="suggestion-meta ms-1">${esc(s.brand || '')}</span>
+                    </span>
+                </button>`).join('')}`;
+        box.classList.remove('d-none');
+        box.querySelectorAll('.suggestion-item').forEach(btn => btn.addEventListener('click', () => {
+            hideBox();
+            navigate('/products/' + btn.dataset.id);
+        }));
+    };
+
     input.addEventListener('input', () => {
         clearTimeout(timer);
         const q = input.value.trim();
-        if (!q) { box.classList.add('d-none'); box.innerHTML = ''; return; }
+        if (requestController) requestController.abort();
+        if (!q) { hideBox(); return; }
         timer = setTimeout(async () => {
+            const seq = ++requestSeq;
+            requestController = new AbortController();
             try {
-                const data = await api('/products/suggest?q=' + encodeURIComponent(q));
-                const suggestions = data.suggestions || [];
-                if (!suggestions.length) { box.innerHTML = '<div class="p-3 text-muted small">Không có gợi ý phù hợp.</div>'; box.classList.remove('d-none'); return; }
-                box.innerHTML = suggestions.map(s => `<button class="suggestion-item" type="button" data-id="${s.id}"><img src="${mediaUrl(s.image_url)}" alt=""><span><span class="fw-bold">${s.highlighted_name}</span><br><small class="text-muted">${esc(s.brand)} · ${money(s.price)}</small></span></button>`).join('');
-                box.classList.remove('d-none');
-                box.querySelectorAll('.suggestion-item').forEach(btn => btn.addEventListener('click', () => { box.classList.add('d-none'); navigate('/products/' + btn.dataset.id); }));
-            } catch (_) { box.classList.add('d-none'); }
-        }, 220);
+                const data = await api('/products/suggest?q=' + encodeURIComponent(q), { signal: requestController.signal, timeout: 8000 });
+                if (seq !== requestSeq || input.value.trim() !== q) return;
+                renderSuggestionList(data.suggestions || []);
+            } catch (err) {
+                if (err.name !== 'AbortError') hideBox();
+            }
+        }, 160);
     });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideBox();
+    });
+
     $('#search-form').addEventListener('submit', (e) => {
         e.preventDefault();
+        clearTimeout(timer);
+        if (requestController) requestController.abort();
         const q = input.value.trim();
-        box.classList.add('d-none');
+        hideBox();
         navigate('/products' + (q ? '?search=' + encodeURIComponent(q) : ''));
     });
-    document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrapper')) box.classList.add('d-none'); });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrapper')) hideBox(); });
 }
 
 function setupBackToTop() {
@@ -609,7 +689,9 @@ function setupBackToTop() {
 
 async function router() {
     try {
+        updatePageChrome();
         if (!state.categories.length) await loadCategories();
+        updatePageChrome();
         renderAccountMenu();
         const { path } = routeInfo();
         const parts = path.split('/').filter(Boolean);

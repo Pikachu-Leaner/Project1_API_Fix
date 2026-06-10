@@ -281,3 +281,32 @@ then the frontend did reach the PHP API route. The problem is inside the server,
 - using `electronic_store` as `DB_NAME` while Aiven database is actually `defaultdb`
 
 Use `/api/health` first, then `/api/db-check`.
+
+## Latest fix package notes
+
+This package includes these frontend/API/database fixes:
+
+- Restored the footer service icons to the original yellow/black style, except **Hàng chính hãng**.
+- Replaced **Hàng chính hãng / Bảo hành điện tử rõ ràng** with a green warranty SVG icon using circular arrows, a shield, and a check mark.
+- Fixed product search API `SQLSTATE[HY093]: Invalid parameter number` by using unique PDO placeholders for each searched field.
+- Fixed search submit so pressing Enter does not loop; it navigates once to `#/products?search=...`.
+- Search suggestions now appear while typing and show product image, highlighted matched text, product name, brand, and price in a horizontal list.
+- Hidden the category nav bar outside the main product list. It no longer appears on admin/product-detail/cart/login/order pages.
+- Hidden cart/search controls while viewing the admin panel.
+- Centered `Không tìm thấy sản phẩm nào phù hợp.` inside its own empty-state container.
+- Added admin dashboard cards for `Products`, `Users`, `Orders`, `Pending Orders`, and `Revenue`.
+- Added `database-update-for-Aiven.sql` for HeidiSQL/Aiven updates without dropping your current data.
+
+For Aiven update through HeidiSQL, import this file after connecting to your Aiven database:
+
+```text
+Project1_API/database-update-for-Aiven.sql
+```
+
+If you want a clean full reset instead, import:
+
+```text
+Project1_API/database-for-Aiven.io.sql
+```
+
+Use the reset file only when you are okay dropping and recreating the tables.
