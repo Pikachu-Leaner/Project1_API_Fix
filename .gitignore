@@ -1,0 +1,4 @@
+.env
+ca.pem
+*.log
+.DS_Store

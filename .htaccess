@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Keep JWT Authorization header available to PHP on Apache/Laragon.
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Let Apache serve existing static assets directly.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Send REST API and SPA routes to index.php.
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
