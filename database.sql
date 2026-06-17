@@ -103,3 +103,30 @@ INSERT INTO products (name, category_id, brand, price, old_price, image_url, det
 -- Admin login: admin@store.com / admin123
 INSERT INTO users (full_name, email, password, role, is_active, is_verified)
 VALUES ('System Admin', 'admin@store.com', '$2y$12$6gtHhzjvRxR3dmwowMpzlORA.QhIcQn/8Ntd9Wg5Wd2DNf6tOCZGe', 'Admin', 1, 1);
+
+-- ── New tables for access/refresh token architecture ──────────────────────────
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_refresh_hash (token_hash),
+    INDEX idx_rt_user (user_id),
+    CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token_hash VARCHAR(64) NOT NULL,
+    revoked_at DATETIME NOT NULL,
+    UNIQUE KEY uq_rev_hash (token_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS rate_limit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    key_name VARCHAR(128) NOT NULL,
+    attempted_at DATETIME NOT NULL,
+    INDEX idx_rl_key_time (key_name, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
