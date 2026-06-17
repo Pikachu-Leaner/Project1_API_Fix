@@ -154,18 +154,27 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         (function () {
-            var primary = (window.PUBLIC_BASE || '/public').replace(/\/+$/, '') + '/js/app.js';
-            var fallback = './js/app.js';
-            var s = document.createElement('script');
-            s.src = primary;
-            s.onerror = function () {
-                var f = document.createElement('script');
-                f.src = fallback;
-                document.body.appendChild(f);
-            };
-            document.body.appendChild(s);
+            var base = (window.PUBLIC_BASE || '/public').replace(/\/+$/, '') + '/js/';
+            var fb   = './js/';
+            var files = ['auth.js','otp.js','login.js','register.js','products.js','cart.js','admin.js','app.js'];
+            var loaded = 0;
+            function loadNext(i) {
+                if (i >= files.length) return;
+                var s = document.createElement('script');
+                s.src = base + files[i];
+                s.onerror = function () {
+                    var f = document.createElement('script');
+                    f.src = fb + files[i];
+                    f.onload = function () { loadNext(i + 1); };
+                    document.body.appendChild(f);
+                };
+                s.onload = function () { loadNext(i + 1); };
+                document.body.appendChild(s);
+            }
+            loadNext(0);
         })();
     </script>
 </body>
