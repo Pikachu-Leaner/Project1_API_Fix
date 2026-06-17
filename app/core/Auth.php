@@ -21,7 +21,7 @@ class Auth {
             Response::error('Token has been revoked.', 401);
         }
 
-        $stmt = $conn->prepare('SELECT id, full_name, email, phone, address, avatar, role, is_active, is_verified, created_at FROM users WHERE id = ? LIMIT 1');
+        $stmt = $conn->prepare('SELECT id, full_name, email, phone, address, avatar, gender, age, description, role, is_active, is_verified, created_at FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([(int)($payload['sub'] ?? 0)]);
         $user = $stmt->fetch();
 

@@ -122,6 +122,6 @@ async function renderProductDetail(id) {
         </div>
         ${data.related?.length ? `<h4 class="mt-5 mb-3 fw-bold">Sản phẩm liên quan</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">${data.related.map(productCard).join('')}</div>` : ''}`;
     $('#detail-add-cart').addEventListener('click', () => addToCart(id));
-    $('#detail-buy-now').addEventListener('click', async () => { await addToCart(id, false); navigate('/cart'); });
+    $('#detail-buy-now').addEventListener('click', async () => { await addToCart(id, false); navigate('/checkout'); });
     document.querySelectorAll('.add-cart').forEach(btn => btn.addEventListener('click', () => addToCart(btn.dataset.id)));
 }

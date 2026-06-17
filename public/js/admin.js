@@ -56,21 +56,57 @@ async function renderAdmin() {
     // Draw revenue line chart (Chart.js)
     if (window.Chart && revenueMonth.revenue_by_month) {
         const rm = revenueMonth.revenue_by_month;
-        new Chart(document.getElementById('revenue-chart'), {
-            type: 'line',
-            data: {
-                labels: rm.map(r => r.month),
-                datasets: [{
-                    label: 'Doanh thu (₫)',
-                    data: rm.map(r => r.revenue),
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13,110,253,0.1)',
-                    tension: 0.4,
-                    fill: true,
-                }]
-            },
-            options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => (v/1e6).toFixed(0)+'M' } } } }
-        });
+        const ctx = document.getElementById('revenue-chart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: rm.map(r => r.month),
+                    datasets: [
+                        {
+                            label: 'Doanh thu (₫)',
+                            data: rm.map(r => r.revenue),
+                            backgroundColor: 'rgba(13,110,253,0.75)',
+                            borderColor: '#0d6efd',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            order: 2,
+                        },
+                        {
+                            label: 'Số đơn hàng',
+                            data: rm.map(r => r.orders),
+                            type: 'line',
+                            borderColor: '#fd7e14',
+                            backgroundColor: 'rgba(253,126,20,0.15)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 1,
+                            pointRadius: 4,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    if (ctx.datasetIndex === 0) return ' Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(ctx.parsed.y) + ' ₫';
+                                    return ' Đơn hàng: ' + ctx.parsed.y;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y:  { position: 'left',  ticks: { callback: v => (v/1e6).toFixed(0) + 'M' }, title: { display: true, text: 'Doanh thu (triệu ₫)' } },
+                        y2: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Số đơn' } },
+                    }
+                }
+            });
+        }
     }
 
     // Draw top products bar chart

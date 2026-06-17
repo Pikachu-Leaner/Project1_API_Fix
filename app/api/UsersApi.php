@@ -10,6 +10,9 @@ class UsersApi {
             'phone' => $u['phone'] ?? null,
             'address' => $u['address'] ?? null,
             'avatar' => $u['avatar'] ?? 'public/images/default-avatar.png',
+            'gender' => $u['gender'] ?? null,
+            'age' => isset($u['age']) && $u['age'] !== null ? (int)$u['age'] : null,
+            'description' => $u['description'] ?? null,
             'role' => $u['role'],
             'is_active' => (bool)$u['is_active'],
             'is_verified' => (bool)$u['is_verified'],
@@ -26,13 +29,19 @@ class UsersApi {
         $user = Auth::user($this->conn);
         $body = Request::body();
         $data = [];
-        foreach (['full_name', 'phone', 'address', 'avatar'] as $field) {
+        foreach (['full_name', 'phone', 'address', 'avatar', 'gender', 'description'] as $field) {
             if (array_key_exists($field, $body)) {
                 $data[$field] = trim((string)$body[$field]);
             }
         }
+        // age is numeric
+        if (array_key_exists('age', $body)) {
+            $age = $body['age'];
+            $data['age'] = ($age === null || $age === '') ? null : max(1, min(120, (int)$age));
+        }
         if (!$data) Response::error('Nothing to update.', 422);
         if (isset($data['full_name']) && $data['full_name'] === '') Response::error('Full name cannot be blank.', 422);
+        if (isset($data['gender']) && $data['gender'] === '') $data['gender'] = null;
 
         $sets = [];
         foreach ($data as $key => $_) $sets[] = "{$key} = :{$key}";
@@ -44,13 +53,13 @@ class UsersApi {
 
     public function index(): void {
         Auth::admin($this->conn);
-        $stmt = $this->conn->query('SELECT id, full_name, email, phone, address, avatar, role, is_active, is_verified, created_at FROM users ORDER BY id DESC');
+        $stmt = $this->conn->query('SELECT id, full_name, email, phone, address, avatar, gender, age, description, role, is_active, is_verified, created_at FROM users ORDER BY id DESC');
         Response::ok(['users' => array_map(fn($u) => $this->publicUser($u), $stmt->fetchAll())]);
     }
 
     public function show(int $id): void {
         $admin = Auth::admin($this->conn);
-        $stmt = $this->conn->prepare('SELECT id, full_name, email, phone, address, avatar, role, is_active, is_verified, created_at FROM users WHERE id = ? LIMIT 1');
+        $stmt = $this->conn->prepare('SELECT id, full_name, email, phone, address, avatar, gender, age, description, role, is_active, is_verified, created_at FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$id]);
         $user = $stmt->fetch();
         if (!$user) Response::error('User not found.', 404);

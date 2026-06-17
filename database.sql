@@ -17,6 +17,9 @@ CREATE TABLE users (
     phone VARCHAR(20),
     address TEXT,
     avatar VARCHAR(255) DEFAULT 'public/images/default-avatar.png',
+    gender ENUM('Nam', 'Nữ', 'Khác') DEFAULT NULL,
+    age TINYINT UNSIGNED DEFAULT NULL,
+    description TEXT DEFAULT NULL,
     role ENUM('Admin', 'Client') DEFAULT 'Client',
     is_active BOOLEAN DEFAULT TRUE,
     is_verified BOOLEAN DEFAULT FALSE,
@@ -130,3 +133,9 @@ CREATE TABLE IF NOT EXISTS rate_limit_log (
     attempted_at DATETIME NOT NULL,
     INDEX idx_rl_key_time (key_name, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── Migration: Add profile fields to existing databases ──────────────────────
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS gender ENUM('Nam', 'Nữ', 'Khác') DEFAULT NULL AFTER avatar,
+    ADD COLUMN IF NOT EXISTS age TINYINT UNSIGNED DEFAULT NULL AFTER gender,
+    ADD COLUMN IF NOT EXISTS description TEXT DEFAULT NULL AFTER age;

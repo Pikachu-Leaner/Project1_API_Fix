@@ -30,7 +30,7 @@ async function renderCart() {
                     </tr>`).join('')}</tbody>
                 </table></div>
                 <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                    <button id="clear-cart" class="btn btn-outline-danger">Xóa giỏ hàng</button>
+                    <button id="clear-cart" class="btn btn-outline-danger"><i class="fas fa-trash-alt me-1"></i>Xóa tất cả giỏ hàng</button>
                     <div class="text-end">
                         <div class="text-muted">Tổng tiền</div>
                         <div class="fs-3 fw-bold text-danger">${money(cart.total_amount)}</div>
@@ -44,10 +44,12 @@ async function renderCart() {
         await refreshCartCount(); renderCart();
     }));
     document.querySelectorAll('.remove-cart').forEach(btn => btn.addEventListener('click', async () => {
+        if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng không?')) return;
         await api('/cart/items/' + btn.dataset.id, { method: 'DELETE' });
         await refreshCartCount(); renderCart();
     }));
     $('#clear-cart')?.addEventListener('click', async () => {
+        if (!confirm('Bạn có chắc muốn xóa TẤT CẢ sản phẩm trong giỏ hàng không?')) return;
         await api('/cart', { method: 'DELETE' }); await refreshCartCount(); renderCart();
     });
 }
