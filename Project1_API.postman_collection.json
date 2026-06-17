@@ -1,9 +1,8 @@
 {
   "info": {
-    "name": "Smartphone Store REST API - Laravel...",
-    "_postman_id": "project1-api-v2",
-    "description": "Full API collection for Project1_API_Fix including Auth (access+refresh tokens), Products, Categories, Cart, Orders, Admin.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "Smartphone Store REST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Full API collection. Set base_url to your server, e.g. http://localhost/Project1_API\nRun Login first — access_token and refresh_token are saved automatically."
   },
   "variable": [
     {
@@ -27,25 +26,20 @@
       "name": "00 - Check Server",
       "item": [
         {
-          "name": "Health Check (GET /)",
+          "name": "Health Check",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/",
+              "raw": "{{base_url}}/",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "api"
+                ""
               ]
             },
-            "description": "Verify the server is running"
+            "description": "Returns the frontend HTML. Confirms server is up."
           },
           "response": []
         }
@@ -79,6 +73,66 @@
           "response": []
         },
         {
+          "name": "Get All Products (by category)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?category=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products (search)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?search=iphone",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "iphone"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
           "name": "Get Product by ID",
           "request": {
             "method": "GET",
@@ -104,7 +158,7 @@
           "response": []
         },
         {
-          "name": "Search / Suggest Products",
+          "name": "Search Suggest",
           "request": {
             "method": "GET",
             "header": [
@@ -114,14 +168,20 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/products/suggest?q=iphone",
+              "raw": "{{base_url}}/api/products/suggest?q=sam",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "products",
-                "suggest?q=iphone"
+                "suggest"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "sam"
+                }
               ]
             },
             "description": ""
@@ -167,29 +227,45 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{base_url}}/auth/register",
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Test User\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+              "raw": "{\n  \"full_name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0901234567\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "var r = pm.response.json();",
-                  "if (r.data && r.data.debug_otp) {",
-                  "  pm.collectionVariables.set('debug_otp', r.data.debug_otp);",
-                  "  console.log('OTP:', r.data.debug_otp);",
-                  "}"
+                  "var res = pm.response.json();",
+                  "if (res.access_token) { pm.collectionVariables.set(\"access_token\", res.access_token); }",
+                  "if (res.refresh_token) { pm.collectionVariables.set(\"refresh_token\", res.refresh_token); }"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Verify OTP (auto-login)",
+          "name": "Verify OTP",
           "request": {
             "method": "POST",
             "header": [
@@ -198,26 +274,29 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{base_url}}/auth/verify-otp",
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"otp\": \"{{debug_otp}}\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var r = pm.response.json();",
-                  "if (r.data) {",
-                  "  pm.collectionVariables.set('access_token',  r.data.access_token);",
-                  "  pm.collectionVariables.set('refresh_token', r.data.refresh_token);",
-                  "}"
-                ]
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
               }
             }
-          ]
+          },
+          "response": []
         },
         {
           "name": "Login",
@@ -229,22 +308,38 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{base_url}}/auth/login",
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\",\n  \"remember_me\": false\n}"
+              "raw": "{\n  \"email\": \"admin@store.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "var r = pm.response.json();",
-                  "if (r.data) {",
-                  "  pm.collectionVariables.set('access_token',  r.data.access_token);",
-                  "  pm.collectionVariables.set('refresh_token', r.data.refresh_token);",
-                  "}"
+                  "var res = pm.response.json();",
+                  "if (res.access_token) { pm.collectionVariables.set(\"access_token\", res.access_token); }",
+                  "if (res.refresh_token) { pm.collectionVariables.set(\"refresh_token\", res.refresh_token); }"
                 ]
               }
             }
@@ -260,22 +355,38 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{base_url}}/auth/refresh",
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
+          "response": [],
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "var r = pm.response.json();",
-                  "if (r.data) {",
-                  "  pm.collectionVariables.set('access_token',  r.data.access_token);",
-                  "  pm.collectionVariables.set('refresh_token', r.data.refresh_token);",
-                  "}"
+                  "var res = pm.response.json();",
+                  "if (res.access_token) { pm.collectionVariables.set(\"access_token\", res.access_token); }",
+                  "if (res.refresh_token) { pm.collectionVariables.set(\"refresh_token\", res.refresh_token); }"
                 ]
               }
             }
@@ -287,12 +398,28 @@
             "method": "GET",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/auth/me"
-          }
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         },
         {
           "name": "Forgot Password",
@@ -304,40 +431,63 @@
                 "value": "application/json"
               }
             ],
-            "url": "{{base_url}}/auth/forgot-password",
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{user_email}}\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var r = pm.response.json();",
-                  "if (r.data && r.data.debug_otp) pm.collectionVariables.set('debug_otp', r.data.debug_otp);"
-                ]
+              "raw": "{\n  \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
               }
             }
-          ]
+          },
+          "response": []
         },
         {
           "name": "Reset Password",
           "request": {
-            "method": "PATCH",
+            "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "url": "{{base_url}}/auth/reset-password",
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"otp\": \"{{debug_otp}}\",\n  \"new_password\": \"NewPass1\"\n}"
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\",\n  \"new_password\": \"newpass123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Logout",
@@ -353,12 +503,29 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/auth/logout",
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -422,7 +589,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Nguyen Van A\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Le Loi, Q.1, HCMC\",\n  \"gender\": \"Nam\",\n  \"age\": 25,\n  \"description\": \"Software developer\"\n}",
+              "raw": "{\n  \"full_name\": \"Nguyen Van A\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Le Loi Q1 HCMC\",\n  \"gender\": \"Nam\",\n  \"age\": 25,\n  \"description\": \"Software developer\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -438,12 +605,27 @@
             "method": "GET",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/cart"
-          }
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         },
         {
           "name": "Add Item to Cart",
@@ -451,41 +633,115 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/cart/items",
+            "url": {
+              "raw": "{{base_url}}/api/cart/items",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 1\n}"
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
-          "name": "Update Cart Item",
+          "name": "Increase Cart Item (+1)",
           "request": {
             "method": "PATCH",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
-              },
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"increase\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Decrease Cart Item (-1)",
+          "request": {
+            "method": "PATCH",
+            "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/cart/items/1",
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                "1"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"action\": \"increase\"\n}"
+              "raw": "{\n  \"action\": \"decrease\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Remove Cart Item",
@@ -493,25 +749,57 @@
             "method": "DELETE",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": "{{base_url}}/cart/items/1"
-          }
-        },
-        {
-          "name": "Clear Cart",
-          "request": {
-            "method": "DELETE",
-            "header": [
+                "key": "Content-Type",
+                "value": "application/json"
+              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/cart"
-          }
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Cart (Delete All)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         },
         {
           "name": "Get My Orders",
@@ -519,33 +807,64 @@
             "method": "GET",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/orders"
-          }
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         },
         {
-          "name": "Create Order",
+          "name": "Create Order (Checkout)",
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/orders",
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customer_name\": \"Test User\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Test Street\",\n  \"payment_method\": \"COD\",\n  \"notes\": \"\"\n}"
+              "raw": "{\n  \"customer_name\": \"Nguyen Van A\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Le Loi Q1 HCMC\",\n  \"payment_method\": \"COD\",\n  \"notes\": \"Giao giờ hành chính\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Order by ID",
@@ -553,12 +872,28 @@
             "method": "GET",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}"
               }
             ],
-            "url": "{{base_url}}/orders/1"
-          }
+            "url": {
+              "raw": "{{base_url}}/api/orders/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         }
       ]
     },
@@ -836,7 +1171,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"iPhone 16 Pro Max 256GB\",\n  \"brand\": \"iPhone\",\n  \"price\": 37990000,\n  \"old_price\": 39990000,\n  \"category_id\": 1,\n  \"image_url\": \"public/images/Phone-card-image-1.jpg\",\n  \"details\": \"Mô tả sản phẩm...\",\n  \"sales_count\": 0,\n  \"is_featured\": true\n}",
+              "raw": "{\n  \"name\": \"iPhone 16 Pro 256GB\",\n  \"brand\": \"iPhone\",\n  \"price\": 29990000,\n  \"old_price\": 31990000,\n  \"category_id\": 1,\n  \"image_url\": \"public/images/Phone-card-image-1.jpg\",\n  \"details\": \"Mô tả sản phẩm...\",\n  \"sales_count\": 0,\n  \"is_featured\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -875,7 +1210,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"iPhone 16 Pro Max 256GB\",\n  \"brand\": \"iPhone\",\n  \"price\": 37990000,\n  \"old_price\": 39990000,\n  \"category_id\": 1,\n  \"image_url\": \"public/images/Phone-card-image-1.jpg\",\n  \"details\": \"Mô tả sản phẩm...\",\n  \"is_featured\": true\n}",
+              "raw": "{\n  \"name\": \"iPhone 16 Pro 256GB\",\n  \"brand\": \"iPhone\",\n  \"price\": 29990000,\n  \"old_price\": 31990000,\n  \"category_id\": 1,\n  \"image_url\": \"public/images/Phone-card-image-1.jpg\",\n  \"details\": \"Mô tả sản phẩm...\",\n  \"is_featured\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -914,7 +1249,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"price\": 35990000\n}",
+              "raw": "{\n  \"price\": 27990000,\n  \"is_featured\": false\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1016,7 +1351,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Máy tính bảng\"\n}",
+              "raw": "{\n  \"name\": \"Máy tính bảng mới\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1027,7 +1362,7 @@
           "response": []
         },
         {
-          "name": "Update Category",
+          "name": "Update Category (PUT)",
           "request": {
             "method": "PUT",
             "header": [
@@ -1144,7 +1479,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/admin/users/1",
+              "raw": "{{base_url}}/api/admin/users/2",
               "host": [
                 "{{base_url}}"
               ],
@@ -1152,7 +1487,7 @@
                 "api",
                 "admin",
                 "users",
-                "1"
+                "2"
               ]
             },
             "description": ""
@@ -1174,7 +1509,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/admin/users/1",
+              "raw": "{{base_url}}/api/admin/users/2",
               "host": [
                 "{{base_url}}"
               ],
@@ -1182,7 +1517,7 @@
                 "api",
                 "admin",
                 "users",
-                "1"
+                "2"
               ]
             },
             "description": "",
