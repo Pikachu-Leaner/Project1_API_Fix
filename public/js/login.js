@@ -9,7 +9,7 @@ function renderLogin(message = '') {
                 <input class="form-control" type="email" id="login-email" placeholder="Email" required>
                 <div class="input-group">
                     <input class="form-control" type="password" id="login-password" placeholder="Mật khẩu" required>
-                    <button class="btn btn-outline-secondary" type="button" id="toggle-pw">
+                    <button class="btn btn-outline-secondary" type="button" id="toggle-pw" title="Hiện/Ẩn mật khẩu" style="border-left:0;">
                         <i class="fas fa-eye" id="pw-icon"></i>
                     </button>
                 </div>

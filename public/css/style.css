@@ -377,3 +377,8 @@ body {
 }
 .auth-card { max-width: 480px; margin: 0 auto; }
 .pre-wrap { white-space: pre-wrap; }
+
+/* ── Show-password toggle fix ─────────────────────────────── */
+.auth-card .input-group .form-control { border-right: 0; }
+.auth-card .input-group .btn-outline-secondary { border-left: 0; background: #fff; }
+.auth-card .input-group .btn-outline-secondary:hover { background: #f8f9fa; }

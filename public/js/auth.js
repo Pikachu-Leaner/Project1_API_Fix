@@ -52,35 +52,45 @@ const TokenStore = {
     useCookies() { return this.getConsent() === 'accepted'; },
 
     set(key, value, persistent = false) {
-        if (this.useCookies() && persistent) {
-            const days = 30;
-            const exp = new Date(Date.now() + days * 864e5).toUTCString();
-            document.cookie = `${key}=${encodeURIComponent(value)};expires=${exp};path=/;SameSite=Strict`;
-        } else {
-            sessionStorage.setItem(key, value);
+        // Always save to sessionStorage so tokens survive within the tab
+        sessionStorage.setItem(key, value);
+        // Also save to cookie or localStorage for cross-tab / persistent sessions
+        if (persistent) {
+            if (this.useCookies()) {
+                const days = 30;
+                const exp = new Date(Date.now() + days * 864e5).toUTCString();
+                document.cookie = `${key}=${encodeURIComponent(value)};expires=${exp};path=/;SameSite=Strict`;
+            } else {
+                localStorage.setItem(key, value);
+            }
         }
-        // Always mirror to memory
+        // Mirror to memory for fastest reads
         window._authMem = window._authMem || {};
         window._authMem[key] = value;
     },
 
     get(key) {
+        // 1. Memory (fastest)
         window._authMem = window._authMem || {};
         if (window._authMem[key]) return window._authMem[key];
-        // Try sessionStorage
+        // 2. sessionStorage (current tab)
         const ss = sessionStorage.getItem(key);
-        if (ss) return ss;
-        // Try cookie
+        if (ss) { window._authMem[key] = ss; return ss; }
+        // 3. localStorage (persistent across tabs)
+        const ls = localStorage.getItem(key);
+        if (ls) { window._authMem[key] = ls; return ls; }
+        // 4. Cookie
         const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + key + '=([^;]*)'));
-        return match ? decodeURIComponent(match[1]) : null;
+        if (match) { const v = decodeURIComponent(match[1]); window._authMem[key] = v; return v; }
+        return null;
     },
 
     remove(key) {
         window._authMem = window._authMem || {};
         delete window._authMem[key];
         sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
         document.cookie = `${key}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        localStorage.removeItem(key); // fallback
     },
 };
 
@@ -111,8 +121,8 @@ function setTokens(accessToken, refreshToken, user, remember = false) {
     state.user = user || null;
     if (user) {
         const str = JSON.stringify(user);
-        if (remember) localStorage.setItem('api_user', str);
-        else          sessionStorage.setItem('api_user', str);
+        sessionStorage.setItem('api_user', str);          // always in session
+        if (remember) localStorage.setItem('api_user', str); // also persist if remember
     } else {
         localStorage.removeItem('api_user');
         sessionStorage.removeItem('api_user');

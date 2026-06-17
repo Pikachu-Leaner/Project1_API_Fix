@@ -92,8 +92,8 @@ class OrdersApi {
 
         try {
             $this->conn->beginTransaction();
-            $order = $this->conn->prepare('INSERT INTO orders (user_id, customer_name, phone, address, payment_method, notes, total_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, "Pending")');
-            $order->execute([(int)$user['id'], $name, $phone, $address, $paymentMethod, $notes, $total]);
+            $order = $this->conn->prepare('INSERT INTO orders (user_id, customer_name, phone, address, payment_method, notes, total_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            $order->execute([(int)$user['id'], $name, $phone, $address, $paymentMethod, $notes, $total, 'Pending']);
             $orderId = (int)$this->conn->lastInsertId();
 
             $detail = $this->conn->prepare('INSERT INTO order_details (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
